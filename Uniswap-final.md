@@ -36,7 +36,7 @@
 
 <!-- Don't remove this -->
 
-## 1 Summary
+## 1 Summary => TL;DR: Uniswap allowed tokens of ERC20 (aka fungible), and written in Vyper (Python but newer)
 
 Uniswap is a decentralized exchange hosted on the main Ethereum blockchain. It enables users to trade any ERC20 token for ETH, or for another ERC20 token. It has no native token, and no fees are charged by Uniswap's creators. Thus it can be considered a public good. 
 
@@ -47,7 +47,7 @@ Unsiwap is written in [Vyper](http://vyper.readthedocs.io), whereas the vast maj
 We 
 
 
-### 1.1 Audit Dashboard
+### 1.1 Audit Dashboard => You can prolly see from the table yourself
 
 ________________
 
@@ -74,7 +74,7 @@ ________________
 
 ________________
 
-### 1.2 Audit Goals
+### 1.2 Audit Goals => Skip this
 
 The focus of the audit was to verify that the smart contract system is secure, resilient and working according to its specifications. The audit activities can be grouped in the following three categories:  
 
@@ -86,7 +86,7 @@ The focus of the audit was to verify that the smart contract system is secure, r
 * Sections of code with high complexity
 * Quantity and quality of test coverage
 
-### 1.3 System Overview 
+### 1.3 System Overview => Also skip this
 
 #### Documentation
 
@@ -112,21 +112,21 @@ The RV report does not cover all possible attacks on the actual smart contract s
 | uniswap_factory.vy  | 97d49145ec4fc6aa31099cb51c0c2f69b6e487b7 |
 
 
-### 1.4 Key Observations
+### 1.4 Key Observations => Not really key, but you should read this anw
 
-#### On Auditing Vyper
+#### On Auditing Vyper => Heavy tech stuffs, ignore this
 
 Vyper has the disadvantage of being a newer language with a smaller community, thus having fewer security analysis tools available. Fortunately, Vyper's design philosophy priortizes both auditability and legibility. The LLL IR from the compiler made it easier to see which opcodes are used to achieve the written instructions.
 
 Despite Vyper's emphasis on legibility, we observed some unituitive output from the compiler. In particular, the built in function `create_with_code_of(address)` does not use the code of the input address, but rather creates a contract which delegates it's logic to the input address.
 
-#### On the quality and preparedness of Uniswap
+#### On the quality and preparedness of Uniswap => Uniswap is well-written with best coding practices, yet not thoroughly tested with negative scenarios
 
 Uniswap's documentation is thorough and well written. The codebase contains natspec comments on each function. The code is written defensively, with frequent assert statements to revert calls with invalid input.
 
 We found the test coverage to be incomplete. Including untested behavior, and sections of code which were untested. The majority of the tests are positive test cases, meaning that the tests confirm that the system works with an expected sequence of actions and inputs. The test suite should be expanded to include more negative scenarios to ensure that the safe checks within the contract system are working correctly.
 
-### 1.5 Recommendations
+### 1.5 Recommendations => Again, just do more testing. The system/exchange is fine tech-wise
 
 The issues in our report do not necesessitate replacing the system as it currently stands.
 
@@ -134,31 +134,31 @@ An important consideration in our recommendation is that the Uniswap system has 
 
 Our primary recommendation is to extend the test suite to cover 100% of the code, and to include testing to ensure for undesirable behavior.
 
-## 2 Threat Model
+## 2 Threat Model => IMPORTANT
 
-### 2.1 Overview 
+### 2.1 Overview => Public/Decentralised meaning it's prone to cheating
 
 Uniswap is a decentralized exchange, which, from the start, gives it a large number of potential adversaries with strong incentives to take advantage of the system. Here we examine the various malicious actors, and the potential impact they may have on the system.
 
 ### 2.2 Detail
 
-#### Malicious Ethereum Attacker
+#### Malicious Ethereum Attacker => Vyper helped in minimising errors
 
 The contracts are live on mainnet, giving anyone the ability to poke at them. The functionality in these contracts is fairly minimal, and the implementation in vyper has likely mitigated many of the classic implementation errors, so it seems like an attacker is going to have the most luck attacking extra features in the attached ERC20 token.
 
-#### Malicious Trader
+#### Malicious Trader => IMPORTANT!!!! Just go to 3.1 and read
 
 Two key areas of attack for malicious traders would be trying to stack rounding issues, and skimming trades via front running. Rounding issues are unlikely to be much of a problem because rounding always favors the liquidity providers, but is likely to be a key attack vector for a while. Specifics and potential mitigations are discussed in **3.1**.
 
-#### Malicious Miner
+#### Malicious Miner => Minor threat, preventable only with human interaction, pls skip this
 
 The key advantage that a Malicious Miner has is the ability to front run transactions much more reliably. Hopefully the social incentives for being a fair pool operator will preclude any of the major pools from participating in this sort of activity, but the threat exists.
 
-#### Malicious Liquidity Provider
+#### Malicious Liquidity Provider => Also skip this, basically, the attacker can't do this with Uniswap, have no idea why they even added this
 
 A large liquidity provider primarily has the advantage when performing rounding attacks. Since rounding errors favor the liquidity provider, someone may temporarily take something like a 95% stake in the liquidity pool, and then attempt to stack rounding issues to drain funds from the liquidity pool. We have so far been unable to figure out a sequence of events that would be favorable to the attacker.
 
-#### Malicious Exchange Creator
+#### Malicious Exchange Creator => This. Refer again to 3.1
 
 Importantly, anyone can create an exchange, and can set it to any ERC20 token they like, which could lead to a few types of attacks. An attacker may attempt to impersonate a popular token by naming it similarly, though as long as the default exchanges are statically added to the frontend manually exposure should be limited.
 
@@ -166,7 +166,7 @@ More interestingly, the exchange creator could register a well known legitimate 
 
 There is also nothing in Uniswap to ensure a token address provided to the the Factory, is compliant with ERC20. However, Exchange contracts are created via a template, so the Exchange code can't be tampered with. The ERC20 tokens could be contracts designed to attack Uniswap, or particularly vulnerable contracts might be added more prone to attack.
 
-#### Malicious Web Attacker
+#### Malicious Web Attacker => This is just phishing, you can Google it
 
 Since the front-facing portion of Uniswap is hosted on a website, anyone who gains access to the DNS, hosting, or Cloudflare account could deploy a malicious Uniswap frontend that could, among other things, redirect transactions meant for the Exchanges to a wallet controlled by the attacker. An attacker may also go after one of the many dependencies pulled in by NPM to inject themselves into the deployment process.
 
@@ -190,7 +190,18 @@ The following table contains all the issues discovered during the audit. The iss
 ## 4 Issue Detail  
 
 
-### 3.1 Liquidity pool can be stolen in some tokens (e.g. ERC-777) ([#29](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/29)) 
+### 3.1 Liquidity pool can be stolen in some tokens (e.g. ERC-777) ([#29](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/29)) => 
+### TL;DR: A program/contract takes time to run each line of its commands, before the whole program could finish, the attacker runs the withdraw command (see the below image), which in turns, run the whole contract again => looping until the fund is empty
+Note: holy f*k, this is so huge
+![Crypto Market Pool - Reentrancy attack in a Solidity smart contract](https://cryptomarketpool.com/wp-content/uploads/2021/03/solidity-reentrancy-attack.jpg)
+
+### To fix, simply add programming locks, aka:
+### Check lock, if it's open run the program, else do nothing, example:
+### -Check lock
+### -If open: Lock, then do whatever
+### -If not: Do nothing
+### - Update funds command, and then open the lock
+
 
 | Severity  | Status |  Link |  Remediation Comment |
 | ------------- | ------------- |  ------------- | ------------- |
@@ -226,7 +237,7 @@ This is not a very accurate algorithm that does not include fees and gas cost, b
 
 Add mutex to all functions that make trades in order to prevent reentrancy.
 
-### 3.2 Frontrunners can skim ~2.5% from every transaction. ([#30](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/30)) 
+### 3.2 Frontrunners can skim ~2.5% from every transaction. ([#30](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/30)) TL;DR: The dealer can cheat buyer for 2.5% of gas money bc Ethereum is dumb => Just read the 2nd paragraph and skip the whole thing
 
 | Severity  | Status |  Link |  Remediation Comment |
 | ------------- | ------------- |  ------------- | ------------- |
@@ -245,7 +256,7 @@ Even with zero slippage, the attacker can still make a large buy order, watch th
 
 Bancor uses a front-running mitigation where there was a maximum gas value, so a user using the maximum gas value cannot be front-run by an attacker increasing the gas for their transaction. This approach might be worth looking into.
 
-### 3.3 Gaps in test coverage ([#32](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/32)) 
+### 3.3 Gaps in test coverage ([#32](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/32)) => Skip this, or include it i guess? It's quite trivial
 
 | Severity  | Status |  Link |  Remediation Comment |
 | ------------- | ------------- |  ------------- | ------------- |
@@ -265,7 +276,7 @@ Specific areas that were identified as lacking proper coverage:
 * Do unit testing in exchange functions with proper state reset between each test as opposed to doing only end-to-end tests with persisting state.
 * In the end-to-end tests more scenarios could be added to test for adverse conditions like big slippage.
 
-### 3.4 Consider using transferFrom() in removeLiquidity() function ([#31](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/31)) 
+### 3.4 Consider using transferFrom() in removeLiquidity() function ([#31](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/31)) => Best practice shenanigans => Skip this
 
 | Severity  | Status |  Link |  Remediation Comment |
 | ------------- | ------------- |  ------------- | ------------- |
@@ -279,7 +290,7 @@ To prevent issues like the BNB issue[1] from coming up in the future, consider u
 [1] https://twitter.com/UniswapExchange/status/1072286773554876416
 
 
-### 3.5 Different 'deadline' behaviour ([#25](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/25)) 
+### 3.5 Different 'deadline' behaviour ([#25](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/25)) => Best practice shenanigans => Skip this
 
 | Severity  | Status |  Link |  Remediation Comment |
 | ------------- | ------------- |  ------------- | ------------- |
@@ -300,7 +311,7 @@ Change all `>` operators to `>=` when working with deadline parameter.
 It does not really affect anything but keeps code more beautiful and consistent.
 
 
-### 3.6 Redundant checks in factory contract ([#24](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/24)) 
+### 3.6 Redundant checks in factory contract ([#24](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/24)) => Best practice shenanigans => Skip this
 
 | Severity  | Status |  Link |  Remediation Comment |
 | ------------- | ------------- |  ------------- | ------------- |
@@ -354,7 +365,7 @@ This meaning that the zeroth address as the exchange, having no code at all, wou
 
 Remove the two assertions.
 
-### 3.7 The factory contract should use a constructor ([#23](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/23)) 
+### 3.7 The factory contract should use a constructor ([#23](https://github.com/ConsenSys/Uniswap-audit-internal-2018-12/issues/23)) => Best practice shenanigans => Skip this
 
 | Severity  | Status |  Link |  Remediation Comment |
 | ------------- | ------------- |  ------------- | ------------- |
